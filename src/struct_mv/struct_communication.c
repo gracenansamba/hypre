@@ -10,6 +10,12 @@
 
 #define DEBUG 0
 
+#ifdef KRIPKE_USE_CALIPER
+#include <adiak.hpp>
+#include <caliper/cali.h>
+#endif
+
+
 #if DEBUG
 char       filename[255];
 FILE      *file;
@@ -1033,8 +1039,9 @@ hypre_InitializeCommunication( hypre_CommPkg        *comm_pkg,
     *--------------------------------------------------------------------*/
 
    j = 0;
+   CALI_MARK_COMM_REGION_BEGIN("post recieves");
    for (i = 0; i < num_recvs; i++)
-   {
+   {    
       comm_type = hypre_CommPkgRecvType(comm_pkg, i);
       hypre_MPI_Irecv(recv_buffers_mpi[i],
                       hypre_CommTypeBufsize(comm_type)*sizeof(HYPRE_Complex),
@@ -1047,7 +1054,9 @@ hypre_InitializeCommunication( hypre_CommPkg        *comm_pkg,
          hypre_CommPkgRecvBufsize(comm_pkg) -= size;
       }
    }
-
+   CALI_MARK_COMM_REGION_END("post recieves");    
+  
+   CALI_MARK_COMM_REGION_BEGIN("initiate sends");   
    for (i = 0; i < num_sends; i++)
    {
       comm_type = hypre_CommPkgSendType(comm_pkg, i);
@@ -1062,7 +1071,7 @@ hypre_InitializeCommunication( hypre_CommPkg        *comm_pkg,
          hypre_CommPkgSendBufsize(comm_pkg) -= size;
       }
    }
-
+   CALI_MARK_COMM_REGION_END("initiate sends");
    /*--------------------------------------------------------------------
     * set up CopyToType and exchange local data
     *--------------------------------------------------------------------*/
@@ -1165,14 +1174,14 @@ hypre_FinalizeCommunication( hypre_CommHandle *comm_handle )
    /*--------------------------------------------------------------------
     * finish communications
     *--------------------------------------------------------------------*/
-
+   CALI_MARK_COMM_REGION_BEGIN("wait for sends");
    if (hypre_CommHandleNumRequests(comm_handle))
    {
       hypre_MPI_Waitall(hypre_CommHandleNumRequests(comm_handle),
                         hypre_CommHandleRequests(comm_handle),
                         hypre_CommHandleStatus(comm_handle));
    }
-
+   CALI_MARK_COMM_REGION_END("wait for sends");
    /*--------------------------------------------------------------------
     * if FirstComm, unpack prefix information and set 'num_entries' and
     * 'entries' for RecvType
