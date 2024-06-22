@@ -10,11 +10,9 @@
 
 #define DEBUG 0
 
-#ifdef KRIPKE_USE_CALIPER
-#include <adiak.hpp>
+#ifdef HYPRE_USING_CALIPER
 #include <caliper/cali.h>
 #endif
-
 
 #if DEBUG
 char       filename[255];
