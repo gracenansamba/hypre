@@ -713,7 +713,7 @@ hypre_ParCSRCommHandleDestroy( hypre_ParCSRCommHandle *comm_handle )
 
    hypre_GpuProfilingPopRange();
    
-   CALI_MARK_COMM_REGION_BEGIN("halo_exchange");
+   CALI_MARK_COMM_REGION_END("halo_exchange");
 
    return hypre_error_flag;
 }
