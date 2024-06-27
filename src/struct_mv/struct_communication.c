@@ -828,6 +828,7 @@ hypre_InitializeCommunication( hypre_CommPkg        *comm_pkg,
                                HYPRE_Int             tag,
                                hypre_CommHandle    **comm_handle_ptr )
 {
+   CALI_MARK_COMM_REGION_BEGIN("halo_exchange");
    hypre_CommHandle    *comm_handle;
 
    HYPRE_Int            ndim       = hypre_CommPkgNDim(comm_pkg);
@@ -1037,7 +1038,6 @@ hypre_InitializeCommunication( hypre_CommPkg        *comm_pkg,
     *--------------------------------------------------------------------*/
 
    j = 0;
-   CALI_MARK_COMM_REGION_BEGIN("post recieves");
    for (i = 0; i < num_recvs; i++)
    {    
       comm_type = hypre_CommPkgRecvType(comm_pkg, i);
@@ -1052,9 +1052,7 @@ hypre_InitializeCommunication( hypre_CommPkg        *comm_pkg,
          hypre_CommPkgRecvBufsize(comm_pkg) -= size;
       }
    }
-   CALI_MARK_COMM_REGION_END("post recieves");    
-  
-   CALI_MARK_COMM_REGION_BEGIN("initiate sends");   
+    
    for (i = 0; i < num_sends; i++)
    {
       comm_type = hypre_CommPkgSendType(comm_pkg, i);
@@ -1069,7 +1067,7 @@ hypre_InitializeCommunication( hypre_CommPkg        *comm_pkg,
          hypre_CommPkgSendBufsize(comm_pkg) -= size;
       }
    }
-   CALI_MARK_COMM_REGION_END("initiate sends");
+
    /*--------------------------------------------------------------------
     * set up CopyToType and exchange local data
     *--------------------------------------------------------------------*/
@@ -1117,7 +1115,10 @@ hypre_InitializeCommunication( hypre_CommPkg        *comm_pkg,
 
    *comm_handle_ptr = comm_handle;
 
+   CALI_MARK_COMM_REGION_END("halo_exchange");
+
    return hypre_error_flag;
+
 }
 
 /*--------------------------------------------------------------------------
@@ -1161,6 +1162,8 @@ hypre_FinalizeCommunication( hypre_CommHandle *comm_handle )
 
    HYPRE_MemoryLocation memory_location     = hypre_HandleMemoryLocation(hypre_handle());
    HYPRE_MemoryLocation memory_location_mpi = memory_location;
+   
+   CALI_MARK_COMM_REGION_BEGIN("halo_exchange");
 
 #if defined(HYPRE_USING_GPU) || defined(HYPRE_USING_DEVICE_OPENMP)
    if (!hypre_GetGpuAwareMPI())
@@ -1172,14 +1175,12 @@ hypre_FinalizeCommunication( hypre_CommHandle *comm_handle )
    /*--------------------------------------------------------------------
     * finish communications
     *--------------------------------------------------------------------*/
-   CALI_MARK_COMM_REGION_BEGIN("wait for sends");
    if (hypre_CommHandleNumRequests(comm_handle))
    {
       hypre_MPI_Waitall(hypre_CommHandleNumRequests(comm_handle),
                         hypre_CommHandleRequests(comm_handle),
                         hypre_CommHandleStatus(comm_handle));
    }
-   CALI_MARK_COMM_REGION_END("wait for sends");
    /*--------------------------------------------------------------------
     * if FirstComm, unpack prefix information and set 'num_entries' and
     * 'entries' for RecvType
@@ -1336,7 +1337,8 @@ hypre_FinalizeCommunication( hypre_CommHandle *comm_handle )
 
    hypre_TFree(send_buffers, HYPRE_MEMORY_HOST);
    hypre_TFree(recv_buffers, HYPRE_MEMORY_HOST);
-
+    
+   CALI_MARK_COMM_REGION_END("halo_exchange");
    return hypre_error_flag;
 }
 

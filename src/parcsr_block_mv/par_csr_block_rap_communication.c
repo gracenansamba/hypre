@@ -14,6 +14,10 @@ arguments are Block matrices.  We should change the code to take the commpkgs as
 the commpkg is not different for a block matrix.) */
 
 
+#ifdef HYPRE_USING_CALIPER
+#include <caliper/cali.h>
+#endif
+
 
 HYPRE_Int
 hypre_GetCommPkgBlockRTFromCommPkgBlockA( hypre_ParCSRBlockMatrix *RT,
@@ -61,6 +65,8 @@ hypre_GetCommPkgBlockRTFromCommPkgBlockA( hypre_ParCSRBlockMatrix *RT,
    /*--------------------------------------------------------------------------
     * determine num_recvs, recv_procs and recv_vec_starts for RT
     *--------------------------------------------------------------------------*/
+
+   CALI_MARK_COMM_REGION_BEGIN("halo_exchange");
 
    proc_mark = hypre_CTAlloc(HYPRE_Int,  num_recvs_A, HYPRE_MEMORY_HOST);
 
@@ -204,6 +210,8 @@ hypre_GetCommPkgBlockRTFromCommPkgBlockA( hypre_ParCSRBlockMatrix *RT,
    hypre_TFree(requests, HYPRE_MEMORY_HOST);
    hypre_TFree(send_big_elmts, HYPRE_MEMORY_HOST);
    hypre_TFree(change_array, HYPRE_MEMORY_HOST);
+   
+   CALI_MARK_COMM_REGION_END("halo_exchange");
 
    return hypre_error_flag;
 }

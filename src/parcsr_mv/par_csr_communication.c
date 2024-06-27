@@ -9,6 +9,11 @@
 
 /*==========================================================================*/
 
+#ifdef HYPRE_USING_CALIPER
+#include <caliper/cali.h>
+#endif
+
+
 #ifdef HYPRE_USING_PERSISTENT_COMM
 static CommPkgJobType getJobTypeOf(HYPRE_Int job)
 {
@@ -284,6 +289,8 @@ hypre_ParCSRPersistentCommHandleStart( hypre_ParCSRPersistentCommHandle *comm_ha
    hypre_ParCSRCommHandleSendData(comm_handle) = send_data;
    hypre_ParCSRCommHandleSendMemoryLocation(comm_handle) = send_memory_location;
 
+   CALI_MARK_COMM_REGION_BEGIN("halo_exchange");
+
    if (hypre_ParCSRCommHandleNumRequests(comm_handle) > 0)
    {
       hypre_TMemcpy( hypre_ParCSRCommHandleSendDataBuffer(comm_handle),
@@ -301,6 +308,8 @@ hypre_ParCSRPersistentCommHandleStart( hypre_ParCSRPersistentCommHandle *comm_ha
          /*hypre_printf("MPI error %d in %s (%s, line %u)\n", ret, __FUNCTION__, __FILE__, __LINE__);*/
       }
    }
+   CALI_MARK_COMM_REGION_END("halo_exchange");
+
 }
 
 /*------------------------------------------------------------------
@@ -314,6 +323,8 @@ hypre_ParCSRPersistentCommHandleWait( hypre_ParCSRPersistentCommHandle *comm_han
 {
    hypre_ParCSRCommHandleRecvData(comm_handle) = recv_data;
    hypre_ParCSRCommHandleRecvMemoryLocation(comm_handle) = recv_memory_location;
+
+   CALI_MARK_COMM_REGION_BEGIN("halo_exchange");
 
    if (hypre_ParCSRCommHandleNumRequests(comm_handle) > 0)
    {
@@ -333,6 +344,8 @@ hypre_ParCSRPersistentCommHandleWait( hypre_ParCSRPersistentCommHandle *comm_han
                     recv_memory_location,
                     HYPRE_MEMORY_HOST);
    }
+   CALI_MARK_COMM_REGION_END("halo_exchange");
+
 }
 #endif // HYPRE_USING_PERSISTENT_COMM
 
@@ -477,6 +490,7 @@ hypre_ParCSRCommHandleCreate_v2 ( HYPRE_Int            job,
    hypre_MPI_Comm_size(comm, &num_procs);
    hypre_MPI_Comm_rank(comm, &my_id);
 
+   CALI_MARK_COMM_REGION_BEGIN("halo_exchange");
    j = 0;
    switch (job)
    {
@@ -612,6 +626,8 @@ hypre_ParCSRCommHandleCreate_v2 ( HYPRE_Int            job,
          }
          break;
       }
+       
+      CALI_MARK_COMM_REGION_END("halo_exchange");
    }
    /*--------------------------------------------------------------------
     * set up comm_handle and return
@@ -649,6 +665,8 @@ hypre_ParCSRCommHandleDestroy( hypre_ParCSRCommHandle *comm_handle )
    }
 
    hypre_GpuProfilingPushRange("hypre_ParCSRCommHandleDestroy");
+ 
+   CALI_MARK_COMM_REGION_BEGIN("halo_exchange");
 
    if (hypre_ParCSRCommHandleNumRequests(comm_handle))
    {
@@ -694,6 +712,8 @@ hypre_ParCSRCommHandleDestroy( hypre_ParCSRCommHandle *comm_handle )
    hypre_TFree(comm_handle, HYPRE_MEMORY_HOST);
 
    hypre_GpuProfilingPopRange();
+   
+   CALI_MARK_COMM_REGION_BEGIN("halo_exchange");
 
    return hypre_error_flag;
 }
@@ -754,6 +774,8 @@ hypre_ParCSRCommPkgCreate_core(
     * at the end of the loop proc_mark[i] contains the number of elements to be
     * received from Proc. i
     * ---------------------------------------------------------------------*/
+
+   CALI_MARK_COMM_REGION_BEGIN("halo_exchange");
 
    proc_num = 0;
    if (num_cols_offd)
@@ -931,6 +953,8 @@ hypre_ParCSRCommPkgCreate_core(
    hypre_TFree(displs, HYPRE_MEMORY_HOST);
    hypre_TFree(info, HYPRE_MEMORY_HOST);
    hypre_TFree(big_buf_data, HYPRE_MEMORY_HOST);
+
+   CALI_MARK_COMM_REGION_END("halo_exchange");
 
    /* finish up with the hand-coded call-by-reference... */
    *p_num_recvs = num_recvs;
