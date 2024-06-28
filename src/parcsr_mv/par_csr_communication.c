@@ -626,9 +626,9 @@ hypre_ParCSRCommHandleCreate_v2 ( HYPRE_Int            job,
          }
          break;
       }
-       
-      CALI_MARK_COMM_REGION_END("halo_exchange");
    }
+   CALI_MARK_COMM_REGION_END("halo_exchange");
+
    /*--------------------------------------------------------------------
     * set up comm_handle and return
     *--------------------------------------------------------------------*/
