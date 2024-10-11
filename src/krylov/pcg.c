@@ -23,6 +23,9 @@
 #include "krylov.h"
 #include "_hypre_utilities.h"
 
+#ifdef HYPRE_USING_CALIPER
+#include <caliper/cali.h>
+#endif
 /*--------------------------------------------------------------------------
  * hypre_PCGFunctionsCreate
  *--------------------------------------------------------------------------*/
@@ -397,7 +400,9 @@ hypre_PCGSolve( void *pcg_vdata,
    /*-----------------------------------------------------------------------
     * Start pcg solve
     *-----------------------------------------------------------------------*/
-
+#ifdef HYPRE_USING_CALIPER
+   CALI_CXX_MARK_LOOP_BEGIN(mainloop_annotation, "PCGSolve_loop");
+#endif
    /* compute eps */
    if (two_norm)
    {
@@ -440,6 +445,9 @@ hypre_PCGSolve( void *pcg_vdata,
       }
       hypre_error(HYPRE_ERROR_GENERIC);
       HYPRE_ANNOTATE_FUNC_END;
+#ifdef HYPRE_USING_CALIPER
+      CALI_CXX_MARK_LOOP_END(mainloop_annotation, "PCGSolve_loop");
+#endif
 
       return hypre_error_flag;
    }
@@ -479,7 +487,9 @@ hypre_PCGSolve( void *pcg_vdata,
          rel_norms[i] = 0.0;
       }
       HYPRE_ANNOTATE_FUNC_END;
-
+#ifdef HYPRE_USING_CALIPER
+      CALI_CXX_MARK_LOOP_END(mainloop_annotation, "PCGSolve_loop");
+#endif
       return hypre_error_flag;
       /* In this case, for the original parcsr pcg, the code would take special
          action to force iterations even though the exact value was known. */
