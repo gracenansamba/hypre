@@ -258,7 +258,7 @@ hypre_BoomerAMGSolve( void               *amg_vdata,
     *    Main V-cycle loop
     *-----------------------------------------------------------------------*/
 #ifdef HYPRE_USING_CALIPER
-   CALI_MARK_LOOP_BEGIN("main_loop");
+   CALI_MARK_LOOP_BEGIN(main_loop_annotation, "main_loop");
 #endif
    while ( (relative_resid >= tol || cycle_count < min_iter) && cycle_count < max_iter )
    {
@@ -348,7 +348,7 @@ hypre_BoomerAMGSolve( void               *amg_vdata,
    }
 
 #ifdef HYPRE_USING_CALIPER
-      CALI_MARK_LOOP_END("main_loop");
+      CALI_MARK_LOOP_END(main_loop_annotation);
 #endif
    /*-----------------------------------------------------------------------
     *    Compute closing statistics
