@@ -14,6 +14,10 @@
 #include "_hypre_parcsr_ls.h"
 #include "par_amg.h"
 
+#ifdef HYPRE_USING_CALIPER
+#include <caliper/cali.h>
+#endif
+
 /*--------------------------------------------------------------------
  * hypre_BoomerAMGSolve
  *--------------------------------------------------------------------*/
@@ -253,7 +257,9 @@ hypre_BoomerAMGSolve( void               *amg_vdata,
    /*-----------------------------------------------------------------------
     *    Main V-cycle loop
     *-----------------------------------------------------------------------*/
-
+#ifdef HYPRE_USING_CALIPER
+   CALI_CXX_MARK_LOOP_BEGIN(mainloop_annotation, "PCGSolve_loop");
+#endif
    while ( (relative_resid >= tol || cycle_count < min_iter) && cycle_count < max_iter )
    {
       hypre_ParAMGDataCycleOpCount(amg_data) = 0;
@@ -341,6 +347,9 @@ hypre_BoomerAMGSolve( void               *amg_vdata,
       hypre_error(HYPRE_ERROR_CONV);
    }
 
+#ifdef HYPRE_USING_CALIPER
+      CALI_CXX_MARK_LOOP_END(mainloop_annotation, "PCGSolve_loop");
+#endif
    /*-----------------------------------------------------------------------
     *    Compute closing statistics
     *-----------------------------------------------------------------------*/
