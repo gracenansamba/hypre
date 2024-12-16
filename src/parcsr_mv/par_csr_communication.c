@@ -1196,7 +1196,7 @@ hypre_MatvecCommPkgCreate ( hypre_ParCSRMatrix *A )
    HYPRE_BigInt         global_num_cols = hypre_ParCSRMatrixGlobalNumCols(A);
 
    HYPRE_ANNOTATE_FUNC_BEGIN;
-
+   CALI_MARK_COMM_REGION_BEGIN("MatVecComm");
    /* Create the assumed partition and should own it */
    if (apart == NULL)
    {
@@ -1216,6 +1216,7 @@ hypre_MatvecCommPkgCreate ( hypre_ParCSRMatrix *A )
                                    apart,
                                    comm_pkg );
 
+   CALI_MARK_COMM_REGION_END("MatVecComm");
    HYPRE_ANNOTATE_FUNC_END;
 
    return hypre_error_flag;
